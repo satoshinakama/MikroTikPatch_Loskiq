@@ -22,6 +22,21 @@ jobs:
           python-version: "3.x"
 
       - name: Run License Generator
+        id: generate
         run: |
           echo "Running license generator for software ID: ${{ github.event.inputs.software_id }}"
-          python3 license.py licgenchr "${{ github.event.inputs.software_id }}" 9DBC845E9018537810FDAE62824322EEE1B12BAD81FCA28EC295FB397C61CE0B
+          python3 license.py licgenchr "${{ github.event.inputs.software_id }}" 9DBC845E9018537810FDAE62824322EEE1B12BAD81FCA28EC295FB397C61CE0B > license.txt
+          echo "License generated and saved to license.txt"
+          echo "license_path=license.txt" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: license-${{ github.run_number }}
+          name: License ${{ github.run_number }}
+          body: |
+            License generated for software ID: `${{ github.event.inputs.software_id }}`
+          files: ${{ steps.generate.outputs.license_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
